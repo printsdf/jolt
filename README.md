@@ -1,6 +1,6 @@
 
 # Code for JoLT: Joint Probabilistic Predictions on Tabular Data Using LLMs
-This repository contains the code to reproduce the experiments carried out in [JoLT: Joint Probabilistic Predictions on Tabular Data Using LLMs](https://arxiv.org/pdf/????).
+This repository contains the code to reproduce the experiments carried out in [JoLT: Joint Probabilistic Predictions on Tabular Data Using LLMs](https://arxiv.org/pdf/2502.11877).
 
 The code has been authored by: John Bronskill, Aliaksandra Shysheya, Shoaib Ahmed Siddiqui, and James Requeima.
 
@@ -82,5 +82,13 @@ To ask questions or report issues, please open an issue on the issues tracker.
 ## Citation
 If you use this code, please cite our paper:
 ```
-???
+@misc{shysheya2025joltjointprobabilisticpredictions,
+      title={JoLT: Joint Probabilistic Predictions on Tabular Data Using LLMs}, 
+      author={Aliaksandra Shysheya and John Bronskill and James Requeima and Shoaib Ahmed Siddiqui and Javier González and David Duvenaud and Richard E. Turner},
+      year={2025},
+      eprint={2502.11877},
+      archivePrefix={arXiv},
+      primaryClass={stat.ML},
+      url={https://arxiv.org/abs/2502.11877}, 
+}
 ```
