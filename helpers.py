@@ -228,9 +228,20 @@ def process_generated_results(gen_results, args):
                     y_test_upper[i] = np.percentile(ys, 97.5)
 
             if len(args.y_column_types) > 1:
-                mae = np.mean(np.abs(y_test_median - np.array(gen_results['data']['y_test'])[:, column]))
+                y_true = np.array(gen_results['data']['y_test'])[:, column]
+                y_pred = y_test_median
             else:
-                mae = np.mean(np.abs(y_test_median - np.array(gen_results['data']['y_test'])))
+                y_true = np.array(gen_results['data']['y_test'])
+                y_pred = y_test_median
+
+            # Calculate regression metrics
+            mae = np.mean(np.abs(y_pred - y_true))
+            mse = np.mean((y_pred - y_true) ** 2)
+            rmse = np.sqrt(mse)
+
+            # MAPE with zero-division protection
+            epsilon = 1e-8
+            mape = np.mean(np.abs((y_true - y_pred) / (y_true + epsilon)))
 
             metrics['y_test'] = y_tests
             if (len(args.y_column_types) == 1) and (args.y_column_types[0] == 'numerical'):  # only used in black box opt with one output y
@@ -241,8 +252,16 @@ def process_generated_results(gen_results, args):
             metrics['y_test_lower'] = y_test_lower
             metrics['y_test_upper'] = y_test_upper
             metrics['mae'] = mae
+            metrics['mse'] = mse
+            metrics['rmse'] = rmse
+            metrics['mape'] = mape
+
             per_column_metrics.append(metrics)
-            print(f'mae: {mae}')
+
+            print(f'mae: {mae:.4f}')
+            print(f'mse: {mse:.4f}')
+            print(f'rmse: {rmse:.4f}')
+            print(f'mape: {mape:.4f}')
         else:  # categorical
             num_xs = len(gen_results['data']['x_test'])
             y_tests = [[] for _ in range(num_xs)]
