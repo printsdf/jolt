@@ -307,3 +307,21 @@ class CsvParser:
         }
 
         return self.data
+
+    def _truncate(self, train_size_limit=None, test_size_limit=None):
+        """
+        Truncate the training and test sets to the specified limits.
+        """
+        data = self.data.copy()
+
+        # Truncate training set if limit is specified
+        if train_size_limit is not None and len(data['x_train']) > train_size_limit:
+            data['x_train'] = data['x_train'][:train_size_limit]
+            data['y_train'] = data['y_train'][:train_size_limit]
+
+        # Truncate test set if limit is specified
+        if test_size_limit is not None and len(data['x_test']) > test_size_limit:
+            data['x_test'] = data['x_test'][:test_size_limit]
+            data['y_test'] = data['y_test'][:test_size_limit]
+
+        return data

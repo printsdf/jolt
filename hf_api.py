@@ -187,7 +187,7 @@ def hf_generate(
     ):
     batch = tokenizer([input_str], return_tensors="pt")
     batch = {k: v.repeat(batch_size, 1) for k, v in batch.items()}
-    batch = {k: v.cuda() for k, v in batch.items()}
+    batch = {k: v.to(model.device) for k, v in batch.items()}
     num_input_ids = batch['input_ids'].shape[1]
 
     return _generate_core(model, tokenizer, batch, temp, top_p, top_k, max_new_tokens, num_input_ids)

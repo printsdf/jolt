@@ -10,7 +10,7 @@ from scipy.special import log_softmax
 
 def _get_mask(model, allowed_tokens):
     out_size = model.get_output_embeddings().out_features
-    mask = torch.ones(out_size, dtype=torch.bool, device='cuda')
+    mask = torch.ones(out_size, dtype=torch.bool, device=model.device)
     mask[allowed_tokens] = False
     return mask
 
@@ -30,6 +30,8 @@ def _get_y_logprobs_by_column(args, tokenizer, model, input_tokens, mask, y_rang
             where each y_logprobs_i is an np.array.
     '''
     bs = len(input_tokens)
+    if bs == 0:
+        return []
     max_prompt_len = max(len(t) for t in input_tokens)
 
     input_ids = torch.full((bs, max_prompt_len),
@@ -38,8 +40,9 @@ def _get_y_logprobs_by_column(args, tokenizer, model, input_tokens, mask, y_rang
     attn_mask = torch.zeros(
         (bs, max_prompt_len), dtype=torch.long, device=model.device)
     for k, t in enumerate(input_tokens):
-        input_ids[k, : len(t)] = torch.tensor(t, dtype=torch.long, device=model.device)
-        attn_mask[k, : len(t)] = torch.ones(len(t), dtype=torch.long, device=model.device)
+        current_len = min(len(t), max_prompt_len)
+        input_ids[k, :current_len] = torch.tensor(t[:current_len], dtype=torch.long, device=model.device)
+        attn_mask[k, :current_len] = torch.ones(current_len, dtype=torch.long, device=model.device)
 
     # Shift so that tokens < n predict n
     if 'gemma-2' in args.llm_type:
@@ -85,16 +88,19 @@ def _get_y_logprobs_categorical(args, tokenizer, model, input_tokens, y_ranges):
             where each y_logprobs_i is an np.array.
     '''
     bs = len(input_tokens)
+    if bs == 0:
+        return []
     max_prompt_len = max(len(t) for t in input_tokens)
 
     input_ids = torch.full((bs, max_prompt_len),
                         tokenizer.pad_token_id,
-                        dtype=torch.long, device='cuda')
+                        dtype=torch.long, device=model.device)
     attn_mask = torch.zeros(
-        (bs, max_prompt_len), dtype=torch.long, device='cuda')
+        (bs, max_prompt_len), dtype=torch.long, device=model.device)
     for k, t in enumerate(input_tokens):
-        input_ids[k, : len(t)] = torch.tensor(t, dtype=torch.long, device='cuda')
-        attn_mask[k, : len(t)] = torch.ones(len(t), dtype=torch.long, device='cuda')
+        current_len = min(len(t), max_prompt_len)
+        input_ids[k, :current_len] = torch.tensor(t[:current_len], dtype=torch.long, device=model.device)
+        attn_mask[k, :current_len] = torch.ones(current_len, dtype=torch.long, device=model.device)
 
     # Shift so that tokens < n predict n
     if 'gemma-2' in args.llm_type:
