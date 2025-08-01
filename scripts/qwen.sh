@@ -9,8 +9,6 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 export TORCH_DISTRIBUTED_DEBUG=DETAIL
 export TORCHELASTIC_ERROR_FILE=error.log
-export NCCL_DEBUG=INFO
-export NCCL_TIMEOUT=1800
 
 echo "开始NOx预测任务"
 echo "========================================"
@@ -24,7 +22,7 @@ LLM_TYPE="qwen2.5-7B-instruct"
 LLM_PATH="/data/models/Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4"
 
 # 2. 根据之前的实验，设置最佳实践参数 - 针对96GB显存优化
-BATCH_SIZE=1             # 多GPU分布式训练，每个GPU的批次大小
+BATCH_SIZE=2             # 96GB显存可以支持稍大的批次
 TRAIN_SIZE_LIMIT=80      # 大幅增加训练样本以显著降低MAE
 TEST_SIZE_LIMIT=20       # 相应增加测试样本
 NUM_SAMPLES=25           # 增加采样数提高预测稳定性
@@ -58,8 +56,8 @@ mkdir -p "$OUTPUT_DIR"
 echo "输出目录已创建: $OUTPUT_DIR"
 
 # --- 执行预测 ---
-echo "开始执行NOx预测 (多GPU分布式模式)..."
-accelerate launch --config_file accelerate_config.yaml run_jolt_distributed.py \
+echo "开始执行NOx预测..."
+accelerate launch --config_file accelerate_config.yaml run_jolt.py \
   --experiment_name "$EXPERIMENT_NAME" \
   --data_path "$DATA_FILE" \
   --llm_type "$LLM_TYPE" \
