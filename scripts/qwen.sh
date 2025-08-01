@@ -16,11 +16,11 @@ LLM_TYPE="qwen2.5-7B-instruct"
 # 2. 新增 LLM_PATH 变量，指向模型的实际文件夹路径
 LLM_PATH="/data/models/Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4"
 
-# 2. 根据之前的实验，设置最佳实践参数
-BATCH_SIZE=1             # 8B模型需要低批次大小以节约显存
-TRAIN_SIZE_LIMIT=10      # 之前实验找到的最佳上下文样本数 (shots)
-TEST_SIZE_LIMIT=5
-NUM_SAMPLES=10
+# 2. 根据之前的实验，设置最佳实践参数 - 针对96GB显存优化
+BATCH_SIZE=2             # 96GB显存可以支持稍大的批次
+TRAIN_SIZE_LIMIT=80      # 大幅增加训练样本以显著降低MAE
+TEST_SIZE_LIMIT=20       # 相应增加测试样本
+NUM_SAMPLES=25           # 增加采样数提高预测稳定性
 
 # 3. 使用更详细的“专家级”Prefix，因为Llama 3 8B能更好地理解复杂指令
 PREFIX="This task is to predict the NOx reduction efficiency (target) of an industrial boiler's DeNOx system, likely an SNCR or SCR process. The target represents the percentage of NOx removed from flue gas. The prediction is based on time-series data from various sensors. The '氨水总流量' (ammonia water flow rate) is a critical input, as ammonia is the reactant for the NOx reduction. The '焚烧炉膛前温度' (furnace chamber temperature) is also vital, as the reduction reactions are highly effective only within a specific temperature window. Operational settings like '二次风机入口电动调节门位置反馈' (secondary air damper position) control the combustion stoichiometry and temperature, which in turn influences both initial NOx formation and the reduction process efficiency."
@@ -62,10 +62,10 @@ python run_jolt.py \
   --train_size_limit $TRAIN_SIZE_LIMIT \
   --test_size_limit $TEST_SIZE_LIMIT \
   --csv_split_option "fixed_indices" \
-  --train_start_index 1111 \
-  --train_end_index 1131 \
-  --test_start_index 1131 \
-  --test_end_index 1136 \
+  --train_start_index 1000 \
+  --train_end_index 1080 \
+  --test_start_index 1080 \
+  --test_end_index 1100 \
   --mode sample_logpy \
   --y_column_names "$TARGET_COLUMN" \
   --y_column_types numerical \
@@ -76,7 +76,7 @@ python run_jolt.py \
   --test_fraction 0.2 \
   --seed $SEED \
   --num_samples $NUM_SAMPLES \
-  --temperature 0.5 \
+  --temperature 0.3 \
   --prefix "$PREFIX"
 
 # 检查执行结果
