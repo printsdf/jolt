@@ -15,19 +15,38 @@ import traceback
 def setup_distributed():
     """设置分布式训练环境"""
     try:
+        # 激进的显存优化
+        if torch.cuda.is_available():
+            # 清理当前GPU内存
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+
+            # 设置显存分配策略
+            torch.cuda.set_per_process_memory_fraction(0.85)  # 每个进程最多使用85%显存
+
         accelerator = Accelerator()
-        
+
         # 只在主进程打印信息
         if accelerator.is_main_process:
-            print(f"分布式训练设置:")
+            print(f"6GPU分布式训练设置:")
             print(f"  设备: {accelerator.device}")
             print(f"  进程数: {accelerator.num_processes}")
             print(f"  本地进程索引: {accelerator.local_process_index}")
             print(f"  是否主进程: {accelerator.is_main_process}")
             print(f"  混合精度: {accelerator.mixed_precision}")
-        
+
+            # 显示每个GPU的显存状态
+            if torch.cuda.is_available():
+                for i in range(torch.cuda.device_count()):
+                    props = torch.cuda.get_device_properties(i)
+                    allocated = torch.cuda.memory_allocated(i) / 1024**3
+                    cached = torch.cuda.memory_reserved(i) / 1024**3
+                    total = props.total_memory / 1024**3
+                    print(f"  GPU {i}: {props.name}")
+                    print(f"    总显存: {total:.1f}GB, 已用: {allocated:.1f}GB, 缓存: {cached:.1f}GB")
+
         return accelerator
-        
+
     except Exception as e:
         print(f"分布式设置失败: {e}")
         traceback.print_exc()
@@ -76,13 +95,26 @@ def run_jolt_distributed():
         
         # 运行JOLT
         results = run_jolt(args=args, model=model, tokenizer=tokenizer)
-        
+
         # 等待所有进程完成
         accelerator.wait_for_everyone()
-        
+
+        # 清理显存
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+
         if accelerator.is_main_process:
-            print("✓ 分布式训练完成!")
-        
+            print("✓ 6GPU分布式训练完成!")
+
+            # 显示最终显存状态
+            if torch.cuda.is_available():
+                print("最终显存状态:")
+                for i in range(torch.cuda.device_count()):
+                    allocated = torch.cuda.memory_allocated(i) / 1024**3
+                    cached = torch.cuda.memory_reserved(i) / 1024**3
+                    print(f"  GPU {i}: 已用 {allocated:.1f}GB, 缓存 {cached:.1f}GB")
+
         return True
         
     except torch.cuda.OutOfMemoryError as e:
