@@ -5,6 +5,11 @@
 # 使用本地Llama 3 8B模型和优化的参数进行预测
 # =============================================================================
 
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export TORCHELASTIC_ERROR_FILE=error.log
+
 echo "开始NOx预测任务"
 echo "========================================"
 
@@ -52,7 +57,7 @@ echo "输出目录已创建: $OUTPUT_DIR"
 
 # --- 执行预测 ---
 echo "开始执行NOx预测..."
-python run_jolt.py \
+accelerate launch --config_file accelerate_config.yaml run_jolt.py \
   --experiment_name "$EXPERIMENT_NAME" \
   --data_path "$DATA_FILE" \
   --llm_type "$LLM_TYPE" \
@@ -88,10 +93,13 @@ else
     echo "========================================"
     echo "预测任务执行失败!"
     echo "请检查以上错误信息并重试"
-    exit 1
 fi
 
 # 放在训练/下载脚本最后一行
 curl -s 'https://oapi.dingtalk.com/robot/send?access_token=979c5387ce734aea95b5b368629c8a412284dc2f52674dd0291eab5f154fb70a' \
   -H 'Content-Type: application/json' \
   -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"任务 $$ 在 $(hostname) 完成于 $(date)\"}}"
+
+curl -X POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=05d1fe64-0c79-4c82-b4b0-b9e16e9d5138' \
+  -H 'Content-Type: application/json' \
+  -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"任务完成\n主机：$(hostname)\n时间：$(date '+%Y-%m-%d %H:%M:%S')\"}}"
