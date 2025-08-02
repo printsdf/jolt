@@ -126,8 +126,11 @@ def get_model_and_tokenizer(args):
     elif "qwen" in args.llm_type:
         model = AutoModelForCausalLM.from_pretrained(
             llm_path,
-            torch_dtype=torch.bfloat16,
+            # torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+            use_sliding_window=True,
             device_map='auto',
+            # attn_implementation="flash_attention_2"
         )
     else:
         assert False

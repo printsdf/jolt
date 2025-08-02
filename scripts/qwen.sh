@@ -95,3 +95,7 @@ fi
 curl -s 'https://oapi.dingtalk.com/robot/send?access_token=979c5387ce734aea95b5b368629c8a412284dc2f52674dd0291eab5f154fb70a' \
   -H 'Content-Type: application/json' \
   -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"任务 $$ 在 $(hostname) 完成于 $(date)\"}}"
+
+curl -X POST 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=05d1fe64-0c79-4c82-b4b0-b9e16e9d5138' \
+  -H 'Content-Type: application/json' \
+  -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"任务完成\n主机：$(hostname)\n时间：$(date '+%Y-%m-%d %H:%M:%S')\"}}"
